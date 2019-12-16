@@ -1,4 +1,4 @@
-## Build and Run
+## Auth0 GoLang test case for authorizing AccessToken
 To build the project:
 
 ```bash
