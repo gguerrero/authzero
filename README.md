@@ -26,6 +26,7 @@ Server responses:
 **/api/private**
 ```json
 {
-    "message": "Hello from a private endpoint! You need to be authenticated to see this."
+    "message": "Hello from a private endpoint! You need to be authenticated to see this.",
+    "statusCode": 200
 }
 ```
