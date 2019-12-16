@@ -31,3 +31,11 @@ Server responses:
     "statusCode": 200
 }
 ```
+
+**/api/private-scoped**
+```json
+{
+    "message": "Insufficient scope.",
+    "statusCode": 403
+}
+```
