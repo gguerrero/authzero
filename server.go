@@ -1,21 +1,21 @@
 package main
 
 import (
-  "./auth"
-  "./router"
+	"./auth"
+	"./router"
 
-  "net/http"
-  "log"
-  "time"
+	"net/http"
+	"log"
+	"time"
 )
 
 const address string = "localhost:8000"
 
 func main() {
 	authJwtMiddleware := auth.New()
-  routerHandler := router.Handler(authJwtMiddleware)
+	routerHandler := router.Handler(authJwtMiddleware)
 
-  log.Print("Booting Server on " + address + "...")
+	log.Print("Booting Server on " + address + "...")
 
 	srv := &http.Server{
 		Handler: routerHandler,
