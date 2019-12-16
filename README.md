@@ -15,6 +15,7 @@ $ ./server
 ```
 
 Server responses:
+
 **/api/public**
 ```json
 {

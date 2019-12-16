@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -24,6 +25,12 @@ type JSONWebKeys struct {
 	X5c []string `json:"x5c"`
 }
 
+// CustomClaims struct representing the claims for user permissions contained in a token
+type CustomClaims struct {
+	Scope string `json:"scope"`
+	jwt.StandardClaims
+}
+
 const issURI string = "https://gguerrero.auth0.com/"
 
 func New() *jwtmiddleware.JWTMiddleware {
@@ -33,6 +40,31 @@ func New() *jwtmiddleware.JWTMiddleware {
 	})
 
 	return jwtMiddleware
+}
+
+func CheckScope(scope string, tokenString string) bool {
+	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
+		cert, err := getPemCert(token)
+		if err != nil {
+			return nil, err
+		}
+		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+		return result, nil
+	})
+
+	claims, ok := token.Claims.(*CustomClaims)
+
+	hasScope := false
+	if ok && token.Valid {
+		result := strings.Split(claims.Scope, " ")
+		for i := range result {
+			if result[i] == scope {
+				hasScope = true
+			}
+		}
+	}
+
+	return hasScope
 }
 
 func parseRSA(token *jwt.Token) (interface{}, error) {

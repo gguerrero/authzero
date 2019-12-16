@@ -1,12 +1,12 @@
 package main
 
 import (
-	"./auth"
-	"./router"
-
 	"net/http"
 	"log"
 	"time"
+
+	"./auth"
+	"./router"
 )
 
 const address string = "localhost:8000"
