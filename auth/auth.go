@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"crypto/rsa"
 
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -35,7 +36,7 @@ const issURI string = "https://gguerrero.auth0.com/"
 
 func New() *jwtmiddleware.JWTMiddleware {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: parseRSA,
+		ValidationKeyGetter: parseTokenToRSAPublicKey,
 		SigningMethod: jwt.SigningMethodRS256,
 	})
 
@@ -44,12 +45,7 @@ func New() *jwtmiddleware.JWTMiddleware {
 
 func CheckScope(scope string, tokenString string) bool {
 	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
-		cert, err := getPemCert(token)
-		if err != nil {
-			return nil, err
-		}
-		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-		return result, nil
+		return tokenToRSAPublicKey(token)
 	})
 
 	claims, ok := token.Claims.(*CustomClaims)
@@ -67,7 +63,7 @@ func CheckScope(scope string, tokenString string) bool {
 	return hasScope
 }
 
-func parseRSA(token *jwt.Token) (interface{}, error) {
+func parseTokenToRSAPublicKey(token *jwt.Token) (interface{}, error) {
 	// Verify 'aud' claim
 	aud := issURI + "api/v2/"
 	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
@@ -81,13 +77,17 @@ func parseRSA(token *jwt.Token) (interface{}, error) {
 		return token, errors.New("invalid issuer")
 	}
 
+	return tokenToRSAPublicKey(token)
+}
+
+func tokenToRSAPublicKey(token *jwt.Token) (*rsa.PublicKey, error) {
 	cert, err := getPemCert(token)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-	return result, nil
+	r, e := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+	return r, e
 }
 
 func getPemCert(token *jwt.Token) (string, error) {
