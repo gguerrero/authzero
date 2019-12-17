@@ -33,6 +33,7 @@ type CustomClaims struct {
 }
 
 const issURI string = "https://gguerrero.auth0.com/"
+const audURI string = "https://gguerrero-client-api"
 
 func New() *jwtmiddleware.JWTMiddleware {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
@@ -65,8 +66,7 @@ func CheckScope(scope string, tokenString string) bool {
 
 func parseTokenToRSAPublicKey(token *jwt.Token) (interface{}, error) {
 	// Verify 'aud' claim
-	aud := issURI + "api/v2/"
-	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
+	checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(audURI, false)
 	if !checkAud {
 		return token, errors.New("invalid audience")
 	}

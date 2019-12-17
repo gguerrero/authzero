@@ -13,6 +13,11 @@ import (
 	"../auth"
 )
 
+// Body from the request
+type Body struct {
+	Message string `json:"message"`
+}
+
 // Response message
 type Response struct {
 	Message string `json:"message"`
@@ -36,10 +41,15 @@ func Handler(authJwtMiddleware *jwtmiddleware.JWTMiddleware) *mux.Router {
 	// This route is only accessible if the user has a valid Access Token with the read:messages scope
 	// We are chaining the jwtmiddleware middleware into the negroni handler function which will check
 	// for a valid token and scope.
-	r.Handle("/api/private-scoped", negroni.New(
+	r.Handle("/api/private/read_messages", negroni.New(
 		negroni.HandlerFunc(authJwtMiddleware.HandlerWithNext),
-		negroni.Wrap(http.HandlerFunc(apiPrivateScopedHandler)),
+		negroni.Wrap(http.HandlerFunc(apiPrivateReadMessages)),
 	))
+
+	r.Handle("/api/private/write_messages", negroni.New(
+		negroni.HandlerFunc(authJwtMiddleware.HandlerWithNext),
+		negroni.Wrap(http.HandlerFunc(apiPrivateWriteMessages)),
+	)).Methods("POST")
 
 	return r
 }
@@ -58,7 +68,7 @@ func apiPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Print("GET /api/private 200[OK]")
 }
 
-func apiPrivateScopedHandler(w http.ResponseWriter, r *http.Request) {
+func apiPrivateReadMessages(w http.ResponseWriter, r *http.Request) {
 		accessToken := getBearerToken(r)
 		hasScope := auth.CheckScope("read:messages", accessToken)
 
@@ -66,12 +76,31 @@ func apiPrivateScopedHandler(w http.ResponseWriter, r *http.Request) {
 			message := "Insufficient scope."
 			responseJSON(message, w, http.StatusForbidden)
 
-			log.Print("GET /api/private-scoped 403[Forbidden]")
+			log.Print("GET /api/private/read_messages 403[Forbidden]")
 		} else {
 			message := "Hello from a private endpoint! You need to be authenticated to see this."
 			responseJSON(message, w, http.StatusOK)
 
-			log.Print("GET /api/private-scoped 200[OK]")
+			log.Print("GET /api/private/read_messages 200[OK]")
+		}
+}
+
+func apiPrivateWriteMessages(w http.ResponseWriter, r *http.Request) {
+		accessToken := getBearerToken(r)
+		hasScope := auth.CheckScope("write:messages", accessToken)
+
+		if !hasScope {
+			message := "Insufficient scope."
+			responseJSON(message, w, http.StatusForbidden)
+
+			log.Print("GET /api/private/write_messages 403[Forbidden]")
+		} else {
+			var body *Body
+			json.NewDecoder(r.Body).Decode(&body)
+
+			responseJSON(body.Message, w, http.StatusOK)
+
+			log.Print("GET /api/private/write_messages 200[OK]")
 		}
 }
 
