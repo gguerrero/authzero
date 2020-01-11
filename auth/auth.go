@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
-	"crypto/rsa"
 
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -38,14 +38,14 @@ const audURI string = "https://gguerrero-client-api"
 func New() *jwtmiddleware.JWTMiddleware {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: parseTokenToRSAPublicKey,
-		SigningMethod: jwt.SigningMethodRS256,
+		SigningMethod:       jwt.SigningMethodRS256,
 	})
 
 	return jwtMiddleware
 }
 
 func CheckScope(scope string, tokenString string) bool {
-	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func (token *jwt.Token) (interface{}, error) {
+	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return tokenToRSAPublicKey(token)
 	})
 
